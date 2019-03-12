@@ -1,0 +1,5 @@
+#Folder
+flask_venv/
+
+#Source
+*.sqlite
