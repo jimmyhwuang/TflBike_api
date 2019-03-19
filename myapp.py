@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, json
+from flask import Flask, jsonify, json, request
 import plotly.graph_objs as go
 from plotly.utils import PlotlyJSONEncoder
 import json
@@ -7,6 +7,7 @@ from urllib.request import urlopen
 import xml.etree.ElementTree as ET
 import requests_cache
 import pandas as pd
+
 
 
 
@@ -40,47 +41,84 @@ class getData():
         return(all_list)
 
 
+class SecurityCheck():
+    def check():
+        api_key = '0ba38fh'
+        app_id = 'Bgt56yhN'
+
+        user_app_id = request.args.get('app_id')
+        user_api_key = request.args.get('api_key')
+
+        bIsPass = True
+
+        if (user_app_id == app_id and user_api_key == api_key):
+            bIsPass = True
+        else:
+            bIsPass = False
+
+        return(bIsPass)
+
+
 @app.route('/tflbikes/allList', methods=['GET'])
 
 def getAllList():
-    data = getData.getAPIData()
-    #return(data.to_html(justify='center',index=False))
-    return (data.to_json(orient='records'))
+    bSecurityCheck = SecurityCheck.check()
+
+    if(bSecurityCheck==True):
+        data = getData.getAPIData()
+        #return(data.to_html(justify='center',index=False))
+        return jsonify(data.to_json(orient='records')),200
+    else:
+        return jsonify({'status':'error','message':'SecurityCheck Error!'}),404
+
+
+
 
 
 @app.route('/tflbikes/stationstat/<id>', methods=['GET'])
 
 def get_station_by_id(id):
-    data = getData.getAPIData()
 
-    filterStationId = data['Station ID']==int(id)
-    result = data[filterStationId]
+    bSecurityCheck = SecurityCheck.check()
+
+    if(bSecurityCheck==True):
+        data = getData.getAPIData()
+        filterStationId = data['Station ID']==int(id)
+        result = data[filterStationId]
     #return(result.to_html(justify='center',index=False))
-    return (result.to_json(orient='records'))
+        return jsonify({'status':'success','message':'success','data':result.to_json(orient='records')}),200
+    else:
+        return jsonify({'status':'error','message':'SecurityCheck Error!'}),404
 
 @app.route('/tflbikes/route/<Start_ID>/<End_ID>', methods=['GET'])
 
 def get_route_station_status(Start_ID,End_ID):
-    data = getData.getAPIData()
+    bSecurityCheck = SecurityCheck.check()
 
-    filterRoute = (data['Station ID']==int(Start_ID)) | (data['Station ID']==int(End_ID))
-    result = data[filterRoute]
-
-    #return(result.to_html(justify='center',index=False))
-    return (result.to_json(orient='records'))
+    if(bSecurityCheck==True):
+        data = getData.getAPIData()
+        filterRoute = (data['Station ID']==int(Start_ID)) | (data['Station ID']==int(End_ID))
+        result = data[filterRoute]
+        #return(result.to_html(justify='center',index=False))
+        return jsonify({'status':'success','message':'success','data':result.to_json(orient='records')}),200
+    else:
+        return jsonify({'status':'error','message':'SecurityCheck Error!'}),404
 
 @app.route('/tflbikes/aval/<Bikeleft>', methods=['GET'])
 
 def get_aval_station(Bikeleft):
-    data = getData.getAPIData()
 
-    filteravalBikeNum = data['Bikeleft']>=int(Bikeleft)
-    result = data[filteravalBikeNum]
+    bSecurityCheck = SecurityCheck.check()
 
-    #return(result.to_html(justify='center',index=False))
-    return (result.to_json(orient='records'))
-
+    if(bSecurityCheck==True):
+        data = getData.getAPIData()
+        filteravalBikeNum = data['Bikeleft']>=int(Bikeleft)
+        result = data[filteravalBikeNum]
+        #return(result.to_html(justify='center',index=False))
+        return jsonify({'status':'success','message':'success','data':result.to_json(orient='records')}),200
+    else:
+        return jsonify({'status':'error','message':'SecurityCheck Error!'}),404
 
 
 if __name__=="__main__":
-        app.run(host='0.0.0.0',port=8080, debug=True)
+        app.run(host='0.0.0.0',port=8080,debug=True)
