@@ -59,7 +59,7 @@ class DbUtil():
     def AuthCheck(user_app_id,user_api_key):
         cluster = Cluster(['35.246.43.76'])
         session = cluster.connect('tflbike')
-        rows = session.execute("""SELECT COUNT(*) AS CNT FROM user WHERE app_id='{}' and api_key='{}' ALLOW FILTERING'""".format(user_app_id,user_api_key))
+        rows = session.execute("""SELECT COUNT(*) AS CNT FROM user WHERE app_id='{}' and api_key='{}' ALLOW FILTERING""".format(user_app_id,user_api_key))
         for user_row in rows:
             if(user_row.cnt>0):
                 return True
