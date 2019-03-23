@@ -57,7 +57,7 @@ class SecurityCheck():
 
 class DbUtil():
     def AuthCheck(user_app_id,user_api_key):
-        cluster = Cluster(['35.246.43.76'])
+        cluster = Cluster(['cassandra'])
         session = cluster.connect('tflbike')
         rows = session.execute("""SELECT COUNT(*) AS CNT FROM user WHERE app_id='{}' and api_key='{}' ALLOW FILTERING""".format(user_app_id,user_api_key))
         for user_row in rows:
