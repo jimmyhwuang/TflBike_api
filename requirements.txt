@@ -2,6 +2,5 @@ pip>=9.0.1
 Flask==0.12.2
 requests
 requests_cache
-plotly
 pandas
-cassandra-driver
+cassandra-driver --install-option="--no-cython"
