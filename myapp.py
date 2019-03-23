@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, json, request
+from cassandra.cluster import Cluster
 import plotly.graph_objs as go
 from plotly.utils import PlotlyJSONEncoder
 import json
@@ -12,11 +13,10 @@ import pandas as pd
 
 
 
+
 requests_cache.install_cache('tfl_api_cache',backend='sqlite',expire_after=12000)
 
 app = Flask(__name__,instance_relative_config=True)
-#app.config.from_object('config')
-#app.config.from_pyfile('config.py')
 
 
 
@@ -43,20 +43,31 @@ class getData():
 
 class SecurityCheck():
     def check():
-        api_key = '0ba38fh'
-        app_id = 'Bgt56yhN'
+        #api_key = '0ba38fh'
+        #app_id = 'Bgt56yhN'
 
         user_app_id = request.args.get('app_id')
         user_api_key = request.args.get('api_key')
+        bIsPass = DbUtil.AuthCheck(user_app_id,user_api_key)
 
-        bIsPass = True
-
-        if (user_app_id == app_id and user_api_key == api_key):
-            bIsPass = True
-        else:
-            bIsPass = False
+        #if (user_app_id == app_id and user_api_key == api_key):
+        #    bIsPass = True
+        #else:
+        #    bIsPass = False
 
         return(bIsPass)
+
+class DbUtil():
+    def AuthCheck(user_app_id,user_api_key):
+        cluster = Cluster(['cassandra'])
+        session = cluster.connect('tflbike')
+        rows = session.execute("""SELECT COUNT(*) AS CNT FROM user WHERE app_id='{}' and api_key='{}' ALLOW FILTERING'""".format(user_app_id,user_api_key))
+        for user_row in rows:
+            if(user_row.cnt>0):
+                return True
+            else:
+                return False
+
 
 
 @app.route('/tflbikes/allList', methods=['GET'])

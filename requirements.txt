@@ -4,3 +4,4 @@ requests
 requests_cache
 plotly
 pandas
+cassandra-driver
