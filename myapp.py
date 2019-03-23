@@ -1,7 +1,5 @@
 from flask import Flask, jsonify, json, request
 from cassandra.cluster import Cluster
-import plotly.graph_objs as go
-from plotly.utils import PlotlyJSONEncoder
 import json
 import requests
 from urllib.request import urlopen
@@ -59,7 +57,7 @@ class SecurityCheck():
 
 class DbUtil():
     def AuthCheck(user_app_id,user_api_key):
-        cluster = Cluster(['cassandra'])
+        cluster = Cluster(['35.246.43.76'])
         session = cluster.connect('tflbike')
         rows = session.execute("""SELECT COUNT(*) AS CNT FROM user WHERE app_id='{}' and api_key='{}' ALLOW FILTERING'""".format(user_app_id,user_api_key))
         for user_row in rows:
