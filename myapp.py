@@ -17,56 +17,47 @@ requests_cache.install_cache('tfl_api_cache',backend='sqlite',expire_after=12000
 app = Flask(__name__,instance_relative_config=True)
 
 
-
+"""
+This class is for get TflBikes (Santander Bikes) bikepoint status data
+By calling API wich tfl provides
+"""
 class getData():
     def getAPIData():
-       # tfl_api_url = 'https://tfl.gov.uk/tfl/syndication/feeds/cycle-hire/livecyclehireupdates.xml'
-       # response = requests.get(tfl_api_url)
-       # root = ET.fromstring(response.content)
-       #
-       # id_list = [int(root[i][0].text) for i in range(0, len(root))]
-       # name_list = [root[i][1].text for i in range(0, len(root))]
-       # locked_list = [root[i][6].text for i in range(0, len(root))]
-       # capacity_list = [int(root[i][11].text) for i in range(0, len(root))]
-       # total_dock_list = [int(root[i][12].text) for i in range(0, len(root))]
+            #Get json data
+            url = 'https://api.tfl.gov.uk/bikepoint'
+            resp = requests.get(url=url)
+            data_array = resp.json()
 
-        #all_list = pd.DataFrame(list(zip(id_list,name_list,locked_list,
-        #                         capacity_list, total_dock_list)), columns = ["Station ID","Station Name","Closed","Capacity","TotalDock"])
-        #all_list['Bikeleft'] = all_list['TotalDock']-all_list['Capacity']
-        #all_list = all_list.drop('Capacity',1)
-		
-		
-		
-		with urlopen("https://api.tfl.gov.uk/bikepoint") as url:
-			data_array = json.loads(url.read().decode())
+            #Get data this services need
+            id_list = [int(data_array[i]['id'].split("_")[1]) for i in range(0, len(data_array))]
+            name_list = [data_array[i]['commonName'] for i in range(0, len(data_array))]
+            locked_list = [data_array[i]['additionalProperties'][2]['value'] for i in range(0, len(data_array))]
+            bike_left_list = [int(data_array[i]['additionalProperties'][6]['value']) for i in range(0, len(data_array))]
+            capacity_list = [int(data_array[i]['additionalProperties'][7]['value']) for i in range(0, len(data_array))]
+            total_dock_list = [int(data_array[i]['additionalProperties'][8]['value']) for i in range(0, len(data_array))]
+            all_list = pd.DataFrame(list(zip(id_list,name_list,locked_list,
+                                            capacity_list, total_dock_list,bike_left_list)), columns = ["Station ID","Station Name","Closed","Capacity","TotalDock","Bikeleft"])
 
-			id_list = [int(data_array[i]['id'].split("_")[1]) for i in range(0, len(data_array))] 
-			name_list = [data_array[i]['commonName'] for i in range(0, len(data_array))]
-			locked_list = [data_array[i]['additionalProperties'][2]['value'] for i in range(0, len(data_array))]
-			capacity_list = [int(data_array[i]['additionalProperties'][7]['value']) for i in range(0, len(data_array))]
-			total_dock_list = [int(data_array[i]['additionalProperties'][8]['value']) for i in range(0, len(data_array))]
-			bike_left_list = [int(data_array[i]['additionalProperties'][6]['value']) for i in range(0, len(data_array))]
-        
-			all_list = pd.DataFrame(list(zip(id_list,name_list,locked_list,
-                                 capacity_list, total_dock_list,bike_left_list)), columns = ["Station ID","Station Name","Closed","Capacity","TotalDock","Bikeleft"])
-		return(all_list)
+            return(all_list)
 
 
+"""
+Class SecurityCheck provides authentication function to make sure user has enter the right api_key and user_app_id while calling the service.
+The result will return as a boolean value
+"""
 class SecurityCheck():
     def check():
-        #api_key = '0ba38fh'
-        #app_id = 'Bgt56yhN'
-
         user_app_id = request.args.get('app_id')
         user_api_key = request.args.get('api_key')
         bIsPass = DbUtil.AuthCheck(user_app_id,user_api_key)
-
-        #if (user_app_id == app_id and user_api_key == api_key):
-        #    bIsPass = True
-        #else:
-        #    bIsPass = False
-
+        #bIsPass = True
         return(bIsPass)
+
+
+"""
+Class DbUtil provides function to interactive with cassandra
+Using api_key and app_id as conditions
+"""
 
 class DbUtil():
     def AuthCheck(user_app_id,user_api_key):
@@ -74,34 +65,41 @@ class DbUtil():
         session = cluster.connect('tflbike')
         rows = session.execute("""SELECT COUNT(*) AS CNT FROM user WHERE app_id='{}' and api_key='{}' ALLOW FILTERING""".format(user_app_id,user_api_key))
         for user_row in rows:
-            if(user_row.cnt>0):
+            if(user_row.cnt>0): #If query returns rows count>0, authentication success
                 return True
             else:
                 return False
 
 
-
+"""
+Pattern '/tflbikes/allList' returns the status data of all Tflbikes bike points
+@ param :
+@ return: json array
+"""
 @app.route('/tflbikes/allList', methods=['GET'])
-
 def getAllList():
-    bSecurityCheck = SecurityCheck.check()
+    bSecurityCheck = SecurityCheck.check()#authentication check
 
     if(bSecurityCheck==True):
         data = getData.getAPIData()
         #return(data.to_html(justify='center',index=False))
-        return jsonify(data.to_json(orient='records')),200
+        return jsonify({'status':'success','message':'success','data':data.to_json(orient='records')}),200
     else:
         return jsonify({'status':'error','message':'SecurityCheck Error!'}),404
 
 
 
-
+"""
+Pattern '/tflbikes/allList/<id>' returns the status data of specific bikepoint
+@ param : station id
+@ return: json array
+"""
 
 @app.route('/tflbikes/stationstat/<id>', methods=['GET'])
 
 def get_station_by_id(id):
 
-    bSecurityCheck = SecurityCheck.check()
+    bSecurityCheck = SecurityCheck.check()#authentication check
 
     if(bSecurityCheck==True):
         data = getData.getAPIData()
@@ -112,10 +110,15 @@ def get_station_by_id(id):
     else:
         return jsonify({'status':'error','message':'SecurityCheck Error!'}),404
 
+"""
+Pattern '/tflbikes/route/<Start_ID>/<End_ID>' returns the status data of two specific bikepoints
+@ param : Start_ID, End_ID
+@ return: json array
+"""
 @app.route('/tflbikes/route/<Start_ID>/<End_ID>', methods=['GET'])
 
 def get_route_station_status(Start_ID,End_ID):
-    bSecurityCheck = SecurityCheck.check()
+    bSecurityCheck = SecurityCheck.check()#authentication check
 
     if(bSecurityCheck==True):
         data = getData.getAPIData()
@@ -126,11 +129,19 @@ def get_route_station_status(Start_ID,End_ID):
     else:
         return jsonify({'status':'error','message':'SecurityCheck Error!'}),404
 
+
+
+"""
+Pattern '/tflbikes/aval/<Bikeleft>' returns bikepoints has number of bike more than the quantity which user assign
+@ param : Bikeleft
+@ return: json array
+"""
+
 @app.route('/tflbikes/aval/<Bikeleft>', methods=['GET'])
 
 def get_aval_station(Bikeleft):
 
-    bSecurityCheck = SecurityCheck.check()
+    bSecurityCheck = SecurityCheck.check()#authentication check
 
     if(bSecurityCheck==True):
         data = getData.getAPIData()
