@@ -47,6 +47,8 @@ class getData():
 			total_dock_list = [int(data_array[i]['additionalProperties'][8]['value']) for i in range(0, len(data_array))]
 			bike_left_list = [int(data_array[i]['additionalProperties'][6]['value']) for i in range(0, len(data_array))]
         
+			all_list = pd.DataFrame(list(zip(id_list,name_list,locked_list,
+                                 capacity_list, total_dock_list)), columns = ["Station ID","Station Name","Closed","Capacity","TotalDock"])
 		return(all_list)
 
 
