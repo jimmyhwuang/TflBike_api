@@ -20,23 +20,34 @@ app = Flask(__name__,instance_relative_config=True)
 
 class getData():
     def getAPIData():
-        tfl_api_url = 'https://tfl.gov.uk/tfl/syndication/feeds/cycle-hire/livecyclehireupdates.xml'
-        response = requests.get(tfl_api_url)
-        root = ET.fromstring(response.content)
+       # tfl_api_url = 'https://tfl.gov.uk/tfl/syndication/feeds/cycle-hire/livecyclehireupdates.xml'
+       # response = requests.get(tfl_api_url)
+       # root = ET.fromstring(response.content)
+       #
+       # id_list = [int(root[i][0].text) for i in range(0, len(root))]
+       # name_list = [root[i][1].text for i in range(0, len(root))]
+       # locked_list = [root[i][6].text for i in range(0, len(root))]
+       # capacity_list = [int(root[i][11].text) for i in range(0, len(root))]
+       # total_dock_list = [int(root[i][12].text) for i in range(0, len(root))]
 
-        id_list = [int(root[i][0].text) for i in range(0, len(root))]
-        name_list = [root[i][1].text for i in range(0, len(root))]
-        locked_list = [root[i][6].text for i in range(0, len(root))]
-        capacity_list = [int(root[i][11].text) for i in range(0, len(root))]
-        total_dock_list = [int(root[i][12].text) for i in range(0, len(root))]
+        #all_list = pd.DataFrame(list(zip(id_list,name_list,locked_list,
+        #                         capacity_list, total_dock_list)), columns = ["Station ID","Station Name","Closed","Capacity","TotalDock"])
+        #all_list['Bikeleft'] = all_list['TotalDock']-all_list['Capacity']
+        #all_list = all_list.drop('Capacity',1)
+		
+		
+		
+		with urlopen("https://api.tfl.gov.uk/bikepoint") as url:
+			data_array = json.loads(url.read().decode())
 
-        all_list = pd.DataFrame(list(zip(id_list,name_list,locked_list,
-                                 capacity_list, total_dock_list)), columns = ["Station ID","Station Name","Closed","Capacity","TotalDock"])
-        all_list['Bikeleft'] = all_list['TotalDock']-all_list['Capacity']
-        all_list = all_list.drop('Capacity',1)
-
-        print(all_list)
-        return(all_list)
+			id_list = [int(data_array[i]['id'].split("_")[1]) for i in range(0, len(data_array))] 
+			name_list = [data_array[i]['commonName'] for i in range(0, len(data_array))]
+			locked_list = [data_array[i]['additionalProperties'][2]['value'] for i in range(0, len(data_array))]
+			capacity_list = [int(data_array[i]['additionalProperties'][7]['value']) for i in range(0, len(data_array))]
+			total_dock_list = [int(data_array[i]['additionalProperties'][8]['value']) for i in range(0, len(data_array))]
+			bike_left_list = [int(data_array[i]['additionalProperties'][6]['value']) for i in range(0, len(data_array))]
+        
+		return(all_list)
 
 
 class SecurityCheck():
