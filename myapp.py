@@ -30,14 +30,13 @@ class getData():
 
             #Get data this services need
             id_list = [int(data_array[i]['id'].split("_")[1]) for i in range(0, len(data_array))]
-            ref_list = ['https://api.tfl.gov.uk/Place/BikePoints_'+str(int(data_array[i]['id'].split("_")[1])) for i in range(0, len(data_array))]
             name_list = [data_array[i]['commonName'] for i in range(0, len(data_array))]
             locked_list = [data_array[i]['additionalProperties'][2]['value'] for i in range(0, len(data_array))]
             bike_left_list = [int(data_array[i]['additionalProperties'][6]['value']) for i in range(0, len(data_array))]
             capacity_list = [int(data_array[i]['additionalProperties'][7]['value']) for i in range(0, len(data_array))]
             total_dock_list = [int(data_array[i]['additionalProperties'][8]['value']) for i in range(0, len(data_array))]
             all_list = pd.DataFrame(list(zip(id_list,name_list,locked_list,
-                                            capacity_list, total_dock_list,bike_left_list,ref_list)), columns = ["Station ID","Station Name","Closed","Capacity","TotalDock","Bikeleft","RefLink"])
+                                            capacity_list, total_dock_list,bike_left_list)), columns = ["Station ID","Station Name","Closed","Capacity","TotalDock","Bikeleft"])
 
             return(all_list)
 
