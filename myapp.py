@@ -65,10 +65,11 @@ class DbUtil():
         session = cluster.connect('tflbike')
         user_lookup_stmt = session.prepare("""SELECT COUNT(*) AS CNT FROM user WHERE app_id=? and api_key=? ALLOW FILTERING""")
         alStmt = []
-		alStmt.append(user_app_id)
-		alStmt.append(user_api_key)
-		rows = session.execute(user_lookup_stmt, alStmt)
-		for user_row in rows:
+        alStmt.append(user_app_id)
+        alStmt.append(user_api_key)
+        rows = session.execute(user_lookup_stmt, alStmt)
+        
+        for user_row in rows:
             if(user_row.cnt>0): #If query returns rows count>0, authentication success
                 return True
             else:
