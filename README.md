@@ -13,8 +13,6 @@ Python, json, Flask, pandas, Google Cloud Service (Cassandra, Kubernetes)
 
 ## Function List
 
-### All Tflbike points status
-
 ```
 Function : returns the status data of all Tflbikes bike points
 url   : /tflbikes/allList
