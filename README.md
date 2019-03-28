@@ -47,6 +47,11 @@ url   : '/tflbikes/aval/<Bikeleft>'
 param : Bikeleft (int)
 return: json array
 ```
+## Authentication
 
+User needs to append "api_key" and "app_id" after the request
 
+```
+Example : '/tflbikes/aval/20?api_key=xxx&app_id=yyyy' 
 
+```
